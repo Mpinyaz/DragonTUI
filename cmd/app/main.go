@@ -1,6 +1,7 @@
 package main
 
 import (
+	"DragonTUI/internal/db"
 	"fmt"
 	"image/color"
 	"log"
@@ -168,12 +169,16 @@ func (s Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	f, err := tea.LogToFile("debug.log", "debug")
+	db, err := db.InitDatabase("dragontui.db")
 	if err != nil {
-		log.Fatalf("err: %w", err)
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	f, err := tea.LogToFile("debug.log", "debug")
+	defer db.Close()
+	if err != nil {
+		log.Fatalf("err: %v", err)
 
 	}
-
 	defer f.Close()
 	s := spinner.New()
 	s.Spinner = spinner.Globe
