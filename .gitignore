@@ -20,7 +20,8 @@
 # OS-specific files
 *.DS_Store
 *.Thumbs.db
-
+*.db
+*.log
 # Go workspace file
 go.work
 go.work.sum
