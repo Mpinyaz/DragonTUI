@@ -33,8 +33,7 @@ func (m *MenuModel) Init() tea.Cmd {
 func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.Width = 0
-		m.Height = msg.Height
+		m.updateDimensions(msg.Width, msg.Height)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
@@ -42,6 +41,9 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Quit
 		case "ctrl+z":
 			return m, tea.Suspend
+		case "ctrl+a":
+			var cmd tea.Cmd
+			return NewAboutModel(m.Width, m.Height), cmd
 		case " ":
 			var cmd tea.Cmd
 			if m.AltScreen {
@@ -58,6 +60,10 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 		return m, cmd
 	}
 	return m, nil
+}
+func (m *MenuModel) updateDimensions(width, height int) {
+	m.Width = width
+	m.Height = height
 }
 
 type KeyMap struct{}
@@ -144,15 +150,15 @@ func (m MenuModel) View() string {
 	for i, v := range colors {
 		const offset = 2
 		c := lipgloss.Color(v[0])
-		fmt.Fprint(&title, titleStyle.MarginLeft(i*offset).Background(c))
+		fmt.Fprint(&title, aboutTitlestyle.MarginLeft(i*offset).Background(c))
 		if i < len(colors)-1 {
 			title.WriteRune('\n')
 		}
 	}
 
-	if m.Width == 0 {
-		return fmt.Sprintf("\n\n\t%s %s\n\n", m.Spinner.View(), lipgloss.NewStyle().Render(utils.Rainbow(lipgloss.NewStyle(), m.Text, blends)))
-	}
+	// if m.Width == 0 {
+	// 	return fmt.Sprintf("\n\n\t%s %s\n\n", m.Spinner.View(), lipgloss.NewStyle().Render(utils.Rainbow(lipgloss.NewStyle(), m.Text, blends)))
+	// }
 	if m.Quitting == true {
 		return fmt.Sprintf("Bye \n")
 	}
@@ -167,5 +173,5 @@ func (m MenuModel) View() string {
 		Foreground(lipgloss.Color("#FFF7DB"))
 	s := fmt.Sprintf("%s\n\n\n%s\n\n", title.String(), banner.Blink(true).Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
 	s += fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
-	return s
+	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, s)
 }

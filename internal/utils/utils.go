@@ -55,3 +55,10 @@ func ColorGrid(xSteps, ySteps int) [][]string {
 
 	return grid
 }
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}

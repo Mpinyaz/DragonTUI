@@ -6,12 +6,14 @@ import (
 	"DragonTUI/internal/views"
 
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"log"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type appModel struct {
-	currentPage models.Page
+	currentPage   models.Page
+	lastWindowMsg tea.WindowSizeMsg
 }
 
 func (m *appModel) Init() tea.Cmd {
@@ -22,12 +24,21 @@ func (m *appModel) Init() tea.Cmd {
 }
 
 func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.lastWindowMsg = msg
+	}
+
 	if m.currentPage == nil {
 		return m, tea.Quit
 	}
 
 	page, cmd := m.currentPage.Update(msg)
 	m.currentPage = page
+
+	if newPage, ok := m.currentPage.(models.Page); ok && newPage != page {
+		return m, tea.Batch(cmd, func() tea.Msg { return m.lastWindowMsg })
+	}
 	return m, cmd
 }
 
@@ -54,7 +65,7 @@ func main() {
 	app := &appModel{
 		currentPage: initPage,
 	}
-	p := tea.NewProgram(app, tea.WithAltScreen())
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running programs:", err)
 	}
