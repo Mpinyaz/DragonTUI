@@ -4,14 +4,12 @@ import (
 	"DragonTUI/internal/models"
 	"DragonTUI/internal/utils"
 	"fmt"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/gamut"
 )
 
 type MenuModel struct {
@@ -23,7 +21,7 @@ type MenuModel struct {
 	Height     int
 	Spinner    spinner.Model
 	Help       help.Model
-	KeyMap     KeyMap
+	KeyMap     MenuKeyMap
 }
 
 func (m *MenuModel) Init() tea.Cmd {
@@ -43,7 +41,7 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "ctrl+a":
 			var cmd tea.Cmd
-			return NewAboutModel(m.Width, m.Height), cmd
+			return GetAboutModel(m.Width, m.Height), cmd
 		case " ":
 			var cmd tea.Cmd
 			if m.AltScreen {
@@ -66,17 +64,17 @@ func (m *MenuModel) updateDimensions(width, height int) {
 	m.Height = height
 }
 
-type KeyMap struct{}
+type MenuKeyMap struct{}
 
-func (k KeyMap) ShortHelp() []key.Binding {
+func (k MenuKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
-		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "complete")),
-		key.NewBinding(key.WithKeys("ctrl+n"), key.WithHelp("ctrl+n", "next")),
-		key.NewBinding(key.WithKeys("ctrl+p"), key.WithHelp("ctrl+p", "prev")),
-		key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "quit")),
+		key.NewBinding(key.WithKeys("k", "up"), key.WithHelp("↑/k", "move up")),
+		key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "tab enter")),
+		key.NewBinding(key.WithKeys("j", "down"), key.WithHelp("↓/j", "move down")),
+		key.NewBinding(key.WithKeys("esc", "q", "ctrl+c"), key.WithHelp("esc", "Exit")),
 	}
 }
-func (k KeyMap) FullHelp() [][]key.Binding {
+func (k MenuKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
@@ -94,68 +92,11 @@ func NewMenuModel() *MenuModel {
 		Height:     0,
 		Spinner:    s,
 		Help:       help.New(),
-		KeyMap:     KeyMap{},
+		KeyMap:     MenuKeyMap{},
 	}
 }
 
-var (
-	normal       = lipgloss.Color("#EEEEEE")
-	base         = lipgloss.NewStyle().Foreground(normal)
-	customBorder = lipgloss.Border{
-		Top:          "▀",
-		Bottom:       "▄",
-		Left:         "█",
-		Right:        "█",
-		TopLeft:      "╔",
-		TopRight:     "╗",
-		BottomLeft:   "╚",
-		BottomRight:  "╝",
-		MiddleLeft:   "╠",
-		MiddleRight:  "╣",
-		Middle:       "╬",
-		MiddleTop:    "╦",
-		MiddleBottom: "╩",
-	}
-	colors = utils.ColorGrid(1, 5)
-
-	titleStyle = lipgloss.NewStyle().
-			MarginLeft(1).
-			MarginRight(5).
-			Padding(0, 1).
-			Italic(true).
-			Foreground(lipgloss.Color("#FFF7DB")).
-			SetString("Lip Gloss")
-	blends = gamut.Blends(lipgloss.Color("#F25D94"), lipgloss.Color("#EDFF82"), 50)
-	style  = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#e60080")).
-		AlignHorizontal(lipgloss.Center).
-		MarginLeft(5).
-		Blink(true).
-		Border(customBorder).
-		BorderForeground(lipgloss.Color("#643aff")).
-		Padding(1, 3)
-	banner = lipgloss.NewStyle().
-		AlignHorizontal(lipgloss.Center).
-		MarginLeft(5).
-		Border(customBorder).
-		BorderForeground(lipgloss.Color("#643aff")).
-		Padding(1, 3)
-)
-
 func (m MenuModel) View() string {
-	var (
-		title strings.Builder
-	)
-	for i, v := range colors {
-		const offset = 2
-		c := lipgloss.Color(v[0])
-		fmt.Fprint(&title, aboutTitlestyle.MarginLeft(i*offset).Background(c))
-		if i < len(colors)-1 {
-			title.WriteRune('\n')
-		}
-	}
-
 	// if m.Width == 0 {
 	// 	return fmt.Sprintf("\n\n\t%s %s\n\n", m.Spinner.View(), lipgloss.NewStyle().Render(utils.Rainbow(lipgloss.NewStyle(), m.Text, blends)))
 	// }
@@ -171,7 +112,7 @@ func (m MenuModel) View() string {
 		Padding(0, 1).
 		Italic(true).
 		Foreground(lipgloss.Color("#FFF7DB"))
-	s := fmt.Sprintf("%s\n\n\n%s\n\n", title.String(), banner.Blink(true).Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
+	s := fmt.Sprintf("\n%s\n\n", banner.Blink(true).Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
 	s += fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
 	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, s)
 }
