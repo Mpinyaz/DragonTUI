@@ -39,9 +39,16 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Quit
 		case "ctrl+z":
 			return m, tea.Suspend
+		case "ctrl+b":
+			var cmd tea.Cmd
+			s := GetContactModel(m.Width, m.Height)
+			s.Init()
+			return s, cmd
 		case "ctrl+a":
 			var cmd tea.Cmd
-			return GetAboutModel(m.Width, m.Height), cmd
+			s := GetAboutModel(m.Width, m.Height)
+			s.Init()
+			return s, cmd
 		case " ":
 			var cmd tea.Cmd
 			if m.AltScreen {
@@ -114,5 +121,5 @@ func (m MenuModel) View() string {
 		Foreground(lipgloss.Color("#FFF7DB"))
 	s := fmt.Sprintf("\n%s\n\n", banner.Blink(true).Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
 	s += fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
-	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, s)
+	return lipgloss.Place(40, 40, lipgloss.Center, lipgloss.Center, s)
 }

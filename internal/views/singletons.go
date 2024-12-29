@@ -10,6 +10,9 @@ var (
 
 	aboutModelOnce sync.Once
 	aboutModel     *AboutModel
+
+	contactModelOnce sync.Once
+	contactModel     *ContactModel
 )
 
 func GetMenuModel() *MenuModel {
@@ -24,4 +27,11 @@ func GetAboutModel(width, height int) *AboutModel {
 		aboutModel = NewAboutModel(width, height)
 	})
 	return aboutModel
+}
+
+func GetContactModel(width, height int) *ContactModel {
+	contactModelOnce.Do(func() {
+		contactModel = NewContactModel(width, height)
+	})
+	return contactModel
 }

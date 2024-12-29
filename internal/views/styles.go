@@ -45,9 +45,8 @@ var (
 		BorderForeground(lipgloss.Color("#643aff")).
 		Padding(1, 3)
 	banner = lipgloss.NewStyle().
-		AlignHorizontal(lipgloss.Center).
-		MarginLeft(5).
+		MarginLeft(20).
 		Border(customBorder).
-		BorderForeground(lipgloss.Color("#643aff")).
+		BorderForeground(lipgloss.Color("#FF5733")).
 		Padding(1, 3)
 )
