@@ -69,11 +69,7 @@ func NewContactModel(width int, height int) *ContactModel {
 					return nil
 				}).
 				Lines(5),
-			huh.NewConfirm().
-				Key("done").
-				Title("Send Message?").
-				Affirmative("Yes!").
-				Negative("Cancel"),
+			huh.NewConfirm().Key("done").Title("Send Message?").Affirmative("Yes!").Negative("Cancel"),
 		),
 	)
 
@@ -84,8 +80,6 @@ type ContactKeyMap struct{}
 
 func (k ContactKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
-		key.NewBinding(key.WithKeys("k", "up"), key.WithHelp("↑/k", "move up")),
-		key.NewBinding(key.WithKeys("j", "down"), key.WithHelp("↓/j", "move down")),
 		key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "Back to Menu")),
 	}
 }
@@ -116,7 +110,9 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "esc":
 			var cmd tea.Cmd
-			return GetMenuModel(), cmd
+			s := GetMenuModel()
+			s.Init()
+			return s, cmd
 		case " ":
 			return m, cmd
 
@@ -124,7 +120,7 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.updateDimensions(msg.Width, msg.Height)
-
+		return m, cmd
 	}
 
 	// Process the form
@@ -135,19 +131,32 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 	}
 
 	if m.Form.State == huh.StateCompleted {
-		m.FeedbackMsg = FeedbackMsg{email: m.Form.GetString("email"), name: m.Form.GetString("name"), message: m.Form.GetString("message")}
-		// Quit when the form is done.
-		// cmds = append(cmds, tea.Quit)
+		if m.Form.GetBool("done") == true {
+			m.FeedbackMsg = FeedbackMsg{
+				email:   m.Form.GetString("email"),
+				name:    m.Form.GetString("name"),
+				message: m.Form.GetString("message"),
+			}
+		} else {
+			m.Form = NewContactModel(m.Width, m.Height).Form
+			s := GetMenuModel()
+			s.Init()
+			return s, m.Form.Init()
+
+		}
 	}
 
 	return m, tea.Batch(cmds...)
 
 }
+
 func (m *ContactModel) View() string {
 	switch m.Form.State {
 	case huh.StateCompleted:
-		s := fmt.Sprintf("\nHey %s, message was delivered \n", utils.Rainbow(lipgloss.NewStyle(), m.FeedbackMsg.name, blends))
-		return lipgloss.Place(20, 20, lipgloss.Center, lipgloss.Center, banner.Bold(true).Italic(true).Render(s))
+		s := lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center).Render(fmt.Sprintf("\nHey %s, message was delivered \n", utils.Rainbow(lipgloss.NewStyle(), m.FeedbackMsg.name, blends)))
+		hlp := fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
+
+		return fmt.Sprintf("\n%s\n\n%s", banner.Bold(true).Italic(true).Render(s), hlp)
 	default:
 		return m.Form.View()
 	}
