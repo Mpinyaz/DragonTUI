@@ -7,8 +7,14 @@ import (
 
 	"fmt"
 	"log"
+	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	_ "github.com/joho/godotenv/autoload"
+)
+
+var (
+	dburl = os.Getenv("DB_URL")
 )
 
 type appModel struct {
@@ -50,7 +56,7 @@ func (m *appModel) View() string {
 }
 
 func main() {
-	db, err := db.InitDatabase("dragontui.db")
+	db, err := db.InitDatabase(dburl)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
