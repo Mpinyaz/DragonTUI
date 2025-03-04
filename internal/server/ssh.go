@@ -11,21 +11,19 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	cl "github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
+	"github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
 )
 
-const (
-	host = "localhost"
-	port = "23234"
-)
-
-func initServer(host string, port int) {
+func InitServer(host string, port int, teaHandler func(ssh.Session) (tea.Model, []tea.ProgramOption)) {
 	s, err := wish.NewServer(wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
+			bubbletea.Middleware(teaHandler),
 			activeterm.Middleware(),
 			lm.Middleware(),
 		),
@@ -40,7 +38,7 @@ func initServer(host string, port int) {
 	go func() {
 		log.Printf("Starting SSH server on %s:%d", host, port)
 		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			log.Error("Could not start server", "error", err)
+			cl.Error("Could not start server", "error", err)
 			done <- nil
 		}
 	}()
@@ -51,6 +49,7 @@ func initServer(host string, port int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		log.Error("Could not stop server", "error", err)
+
+		cl.Error("Could not stop server", "error", err)
 	}
 }
