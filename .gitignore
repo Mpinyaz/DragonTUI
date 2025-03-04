@@ -5,7 +5,7 @@
 *.dylib
 *.out
 *.o
-
+*.ssh/
 # Generated files
 /dist/
 /build/

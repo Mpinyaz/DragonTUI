@@ -2,22 +2,21 @@ package main
 
 import (
 	"DragonTUI/internal/db"
-	"DragonTUI/internal/models"
-	"DragonTUI/internal/views"
+	"strconv"
 
-	"fmt"
+	"DragonTUI/internal/models"
+	"DragonTUI/internal/server"
+	"DragonTUI/internal/views"
 	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	_ "github.com/joho/godotenv/autoload"
-)
-
-var (
-	dburl = os.Getenv("DB_URL")
+	"github.com/charmbracelet/ssh"
+	"github.com/joho/godotenv"
 )
 
 type appModel struct {
+	term          string
 	currentPage   models.Page
 	lastWindowMsg tea.WindowSizeMsg
 }
@@ -54,8 +53,28 @@ func (m *appModel) View() string {
 	}
 	return "Goodbye!"
 }
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	pty, _, _ := s.Pty()
+
+	initPage := views.NewMenuModel()
+	app := &appModel{
+		term:        pty.Term,
+		currentPage: initPage,
+	}
+	return app, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(os.Stderr)}
+
+}
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+	dburl := os.Getenv("DB_URL")
+	app_port, _ := strconv.Atoi(os.Getenv("APP_PORT"))
+
+	app_host := os.Getenv("APP_HOST")
+
 	db, err := db.InitDatabase(dburl)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
@@ -67,12 +86,5 @@ func main() {
 
 	}
 	defer f.Close()
-	initPage := views.NewMenuModel()
-	app := &appModel{
-		currentPage: initPage,
-	}
-	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseCellMotion())
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running programs:", err)
-	}
+	server.InitServer(app_host, app_port, teaHandler)
 }
