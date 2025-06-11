@@ -28,7 +28,6 @@ func InitServer(host string, port int, teaHandler func(ssh.Session) (tea.Model, 
 			lm.Middleware(),
 		),
 	)
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -49,7 +48,6 @@ func InitServer(host string, port int, teaHandler func(ssh.Session) (tea.Model, 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-
 		cl.Error("Could not stop server", "error", err)
 	}
 }

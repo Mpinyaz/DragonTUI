@@ -8,16 +8,12 @@ import (
 )
 
 const Logo string = `
-
-
-	██╗    ██╗██████╗ ██████╗  █████╗  ██████╗  ██████╗ ███╗   ██╗██╗
-	██╔╝   ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝ ██╔═══██╗████╗  ██║╚██╗
-	██╔╝   ██╔╝ ██║  ██║██████╔╝███████║██║  ███╗██║   ██║██╔██╗ ██║ ╚██╗
-	╚██╗  ██╔╝  ██║  ██║██╔══██╗██╔══██║██║   ██║██║   ██║██║╚██╗██║ ██╔╝
-	╚██╗██╔╝   ██████╔╝██║  ██║██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██╔╝
-	╚═╝╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝
-
-
+  ██╗    ██╗██████╗ ██████╗  █████╗  ██████╗  ██████╗ ███╗   ██╗██╗  
+ ██╔╝   ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝ ██╔═══██╗████╗  ██║╚██╗ 
+██╔╝   ██╔╝ ██║  ██║██████╔╝███████║██║  ███╗██║   ██║██╔██╗ ██║ ╚██╗
+╚██╗  ██╔╝  ██║  ██║██╔══██╗██╔══██║██║   ██║██║   ██║██║╚██╗██║ ██╔╝
+ ╚██╗██╔╝   ██████╔╝██║  ██║██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██╔╝ 
+  ╚═╝╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝  
 	`
 
 func Rainbow(base lipgloss.Style, s string, colors []color.Color) string {
@@ -28,6 +24,7 @@ func Rainbow(base lipgloss.Style, s string, colors []color.Color) string {
 	}
 	return str
 }
+
 func ColorGrid(xSteps, ySteps int) [][]string {
 	x0y0, _ := colorful.Hex("#F25D94")
 	x1y0, _ := colorful.Hex("#EDFF82")
@@ -45,10 +42,10 @@ func ColorGrid(xSteps, ySteps int) [][]string {
 	}
 
 	grid := make([][]string, ySteps)
-	for x := 0; x < ySteps; x++ {
+	for x := range make([]int, ySteps) {
 		y0 := x0[x]
 		grid[x] = make([]string, xSteps)
-		for y := 0; y < xSteps; y++ {
+		for y := range make([]int, xSteps) {
 			grid[x][y] = y0.BlendLuv(x1[x], float64(y)/float64(xSteps)).Hex()
 		}
 	}

@@ -7,22 +7,40 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type MenuModel struct {
-	Text       string
-	Quitting   bool
-	AltScreen  bool
-	Suspending bool
-	Width      int
-	Height     int
-	Spinner    spinner.Model
-	Help       help.Model
-	KeyMap     MenuKeyMap
+	Text             string
+	Quitting         bool
+	AltScreen        bool
+	Suspending       bool
+	Width            int
+	Height           int
+	Spinner          spinner.Model
+	Help             help.Model
+	KeyMap           MenuKeyMap
+	SelectedMenuItem string
+	MenuList         list.Model
 }
+
+var (
+	navStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("#fffdf5")).Background(lipgloss.Color("#25A065"))
+	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
+	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+)
+
+type item struct{ title, desc string }
+
+func (i item) Title() string       { return i.title }
+func (i item) Description() string { return i.desc }
+func (i item) FilterValue() string { return i.title }
 
 func (m *MenuModel) Init() tea.Cmd {
 	return m.Spinner.Tick
@@ -49,6 +67,7 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			s := GetAboutModel(m.Width, m.Height)
 			s.Init()
 			return s, cmd
+
 		case " ":
 			var cmd tea.Cmd
 			if m.AltScreen {
@@ -58,14 +77,40 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			}
 			m.AltScreen = !m.AltScreen
 			return m, cmd
+		case "enter":
+			i, ok := m.MenuList.SelectedItem().(item)
+			if ok {
+				m.SelectedMenuItem = string(i.title)
+			}
+
+			if i.title == "About" {
+				var cmd tea.Cmd
+				s := GetAboutModel(m.Width, m.Height)
+				s.Init()
+				return s, cmd
+
+			}
+			if i.title == "Contact Me" {
+				var cmd tea.Cmd
+				s := GetContactModel(m.Width, m.Height)
+				s.Init()
+				return s, cmd
+
+			}
+			return m, tea.Quit
 		}
+
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.Spinner, cmd = m.Spinner.Update(msg)
 		return m, cmd
 	}
-	return m, nil
+
+	var cmd tea.Cmd
+	m.MenuList, cmd = m.MenuList.Update(msg)
+	return m, cmd
 }
+
 func (m *MenuModel) updateDimensions(width, height int) {
 	m.Width = width
 	m.Height = height
@@ -81,6 +126,7 @@ func (k MenuKeyMap) ShortHelp() []key.Binding {
 		key.NewBinding(key.WithKeys("esc", "q", "ctrl+c"), key.WithHelp("esc", "Exit")),
 	}
 }
+
 func (k MenuKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
@@ -89,6 +135,22 @@ func NewMenuModel() *MenuModel {
 	s := spinner.New()
 	s.Spinner = spinner.Globe
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#edff82"))
+	items := []list.Item{
+		item{title: "About", desc: "Find out more about my skills and experience"},
+		item{title: "Contact Me", desc: "Send me an email!!!"},
+		item{title: "Github Repo", desc: "Explore my side projects"},
+	}
+
+	d := list.NewDefaultDelegate()
+
+	d.Styles.SelectedTitle = d.Styles.SelectedTitle.Foreground(lipgloss.Color("#fffdf5")).Background(lipgloss.Color("#6f03fc")).Bold(true).Blink(true)
+
+	l := list.New(items, d, 80, 15)
+	l.Styles.Title = list.DefaultStyles().Title.Padding(0).Margin(1)
+	l.Title = "Learn more about me"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.SetShowHelp(false)
 
 	return &MenuModel{
 		Text:       "Loading App...press q to quit",
@@ -100,6 +162,7 @@ func NewMenuModel() *MenuModel {
 		Spinner:    s,
 		Help:       help.New(),
 		KeyMap:     MenuKeyMap{},
+		MenuList:   l,
 	}
 }
 
@@ -107,19 +170,19 @@ func (m MenuModel) View() string {
 	// if m.Width == 0 {
 	// 	return fmt.Sprintf("\n\n\t%s %s\n\n", m.Spinner.View(), lipgloss.NewStyle().Render(utils.Rainbow(lipgloss.NewStyle(), m.Text, blends)))
 	// }
-	if m.Quitting == true {
+	if m.Quitting {
 		return fmt.Sprintf("Bye \n")
 	}
-	m.Help.Styles.ShortDesc = style.Faint(true).UnsetBlink()
+	m.Help.Styles.ShortDesc = style.Faint(true).Blink(true)
 	m.Help.ShortSeparator = " • "
 	m.Help.Styles.ShortSeparator = lipgloss.NewStyle().Blink(true).Foreground(lipgloss.Color("#334dcc"))
 	m.Help.Styles.ShortKey = lipgloss.NewStyle().
-		MarginLeft(1).
-		MarginRight(5).
-		Padding(0, 1).
 		Italic(true).
-		Foreground(lipgloss.Color("#FFF7DB"))
-	s := fmt.Sprintf("\n%s\n\n", banner.Blink(true).Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
-	s += fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
-	return lipgloss.Place(40, 40, lipgloss.Center, lipgloss.Center, s)
+		Foreground(lipgloss.Color("#fff7db"))
+	banner := fmt.Sprintf("\n%s\n", banner.Render(utils.Rainbow(lipgloss.NewStyle(), utils.Logo, blends)))
+	menuList := m.MenuList.View()
+	keymap := fmt.Sprintf("\n\n%s\n", m.Help.View(m.KeyMap))
+
+	finalRender := banner + menuList + keymap
+	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, finalRender)
 }

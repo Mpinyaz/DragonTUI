@@ -2,6 +2,7 @@ package views
 
 import (
 	"DragonTUI/internal/utils"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/gamut"
 )
@@ -45,8 +46,8 @@ var (
 		BorderForeground(lipgloss.Color("#643aff")).
 		Padding(1, 3)
 	banner = lipgloss.NewStyle().
-		MarginLeft(20).
 		Border(customBorder).
-		BorderForeground(lipgloss.Color("#FF5733")).
-		Padding(1, 3)
+		Padding(1).
+		Blink(true).
+		BorderForeground(lipgloss.Color("#FF5733"))
 )

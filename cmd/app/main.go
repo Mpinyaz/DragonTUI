@@ -2,13 +2,12 @@ package main
 
 import (
 	"DragonTUI/internal/db"
-	"strconv"
-
 	"DragonTUI/internal/models"
 	"DragonTUI/internal/server"
 	"DragonTUI/internal/views"
 	"log"
 	"os"
+	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/ssh"
@@ -53,16 +52,17 @@ func (m *appModel) View() string {
 	}
 	return "Goodbye!"
 }
+
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, _ := s.Pty()
 
 	initPage := views.NewMenuModel()
+
 	app := &appModel{
 		term:        pty.Term,
 		currentPage: initPage,
 	}
 	return app, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(os.Stderr)}
-
 }
 
 func main() {
@@ -83,7 +83,6 @@ func main() {
 	defer db.Close()
 	if err != nil {
 		log.Fatalf("err: %v", err)
-
 	}
 	defer f.Close()
 	server.InitServer(app_host, app_port, teaHandler)
