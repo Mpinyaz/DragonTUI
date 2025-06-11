@@ -56,7 +56,7 @@ func (m *appModel) View() string {
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, _ := s.Pty()
 
-	initPage := views.NewMenuModel()
+	initPage := views.NewMenuModel(pty.Window.Width, pty.Window.Height)
 
 	app := &appModel{
 		term:        pty.Term,

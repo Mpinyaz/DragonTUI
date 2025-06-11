@@ -15,9 +15,9 @@ var (
 	contactModel     *ContactModel
 )
 
-func GetMenuModel() *MenuModel {
+func GetMenuModel(width, height int) *MenuModel {
 	menuModelOnce.Do(func() {
-		menuModel = NewMenuModel()
+		menuModel = NewMenuModel(width, height)
 	})
 	return menuModel
 }

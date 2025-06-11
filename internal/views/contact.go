@@ -4,12 +4,13 @@ import (
 	"DragonTUI/internal/models"
 	"DragonTUI/internal/utils"
 	"fmt"
+	"regexp"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
-	"regexp"
 	// "github.com/charmbracelet/lipgloss"
 )
 
@@ -83,6 +84,7 @@ func (k ContactKeyMap) ShortHelp() []key.Binding {
 		key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "Back to Menu")),
 	}
 }
+
 func (k ContactKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
@@ -93,7 +95,7 @@ func (m *ContactModel) updateDimensions(width, height int) {
 }
 
 func (m *ContactModel) Init() tea.Cmd {
-	return m.Form.Init()
+	return tea.Batch(tea.SetWindowTitle("Contact Me"), m.Form.Init())
 }
 
 func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
@@ -110,7 +112,7 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "esc":
 			var cmd tea.Cmd
-			s := GetMenuModel()
+			s := GetMenuModel(m.Width, m.Height)
 			s.Init()
 			return s, cmd
 		case " ":
@@ -139,7 +141,7 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			}
 		} else {
 			m.Form = NewContactModel(m.Width, m.Height).Form
-			s := GetMenuModel()
+			s := GetMenuModel(m.Width, m.Height)
 			s.Init()
 			return s, m.Form.Init()
 
@@ -147,7 +149,6 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
-
 }
 
 func (m *ContactModel) View() string {

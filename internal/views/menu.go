@@ -27,15 +27,6 @@ type MenuModel struct {
 	MenuList         list.Model
 }
 
-var (
-	navStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("#fffdf5")).Background(lipgloss.Color("#25A065"))
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-)
-
 type item struct{ title, desc string }
 
 func (i item) Title() string       { return i.title }
@@ -43,7 +34,7 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 func (m *MenuModel) Init() tea.Cmd {
-	return m.Spinner.Tick
+	return tea.Batch(tea.SetWindowTitle("Dragon's Lair"), m.Spinner.Tick)
 }
 
 func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
@@ -131,7 +122,7 @@ func (k MenuKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
-func NewMenuModel() *MenuModel {
+func NewMenuModel(width, height int) *MenuModel {
 	s := spinner.New()
 	s.Spinner = spinner.Globe
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#edff82"))
@@ -157,8 +148,8 @@ func NewMenuModel() *MenuModel {
 		Quitting:   false,
 		AltScreen:  true,
 		Suspending: false,
-		Width:      0,
-		Height:     0,
+		Width:      width,
+		Height:     height,
 		Spinner:    s,
 		Help:       help.New(),
 		KeyMap:     MenuKeyMap{},
@@ -170,9 +161,9 @@ func (m MenuModel) View() string {
 	// if m.Width == 0 {
 	// 	return fmt.Sprintf("\n\n\t%s %s\n\n", m.Spinner.View(), lipgloss.NewStyle().Render(utils.Rainbow(lipgloss.NewStyle(), m.Text, blends)))
 	// }
-	if m.Quitting {
-		return fmt.Sprintf("Bye \n")
-	}
+	// if m.Quitting {
+	// 	return fmt.Sprintf("Bye \n")
+	// }
 	m.Help.Styles.ShortDesc = style.Faint(true).Blink(true)
 	m.Help.ShortSeparator = " • "
 	m.Help.Styles.ShortSeparator = lipgloss.NewStyle().Blink(true).Foreground(lipgloss.Color("#334dcc"))
@@ -183,6 +174,5 @@ func (m MenuModel) View() string {
 	menuList := m.MenuList.View()
 	keymap := fmt.Sprintf("\n\n%s\n", m.Help.View(m.KeyMap))
 
-	finalRender := banner + menuList + keymap
-	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, finalRender)
+	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, banner+menuList+keymap)
 }

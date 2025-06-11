@@ -42,8 +42,7 @@ type AboutModel struct {
 }
 
 func (m *AboutModel) Init() tea.Cmd {
-
-	return nil
+	return tea.SetWindowTitle("About me")
 }
 
 func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
@@ -60,7 +59,7 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "esc":
 			var cmd tea.Cmd
-			return GetMenuModel(), cmd
+			return GetMenuModel(m.Width, m.Height), cmd
 		case " ":
 			return m, cmd
 		}
@@ -95,9 +94,8 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 }
 
 func (m *AboutModel) View() string {
-
 	if len(m.Content) == 0 {
-		fileContent, err := os.ReadFile("artichoke.md")
+		fileContent, err := os.ReadFile("resume.md")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Could not load file:", err)
 			os.Exit(1)
@@ -138,14 +136,14 @@ func (m *AboutModel) View() string {
 
 	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, s)
 }
+
 func (m *AboutModel) updateDimensions(width, height int) {
 	m.Width = width
 	m.Height = height
 }
+
 func (m *AboutModel) headerView() string {
-	var (
-		title strings.Builder
-	)
+	var title strings.Builder
 	for i, v := range colors {
 		const offset = 2
 		c := lipgloss.Color(v[0])
@@ -158,7 +156,6 @@ func (m *AboutModel) headerView() string {
 	line := strings.Repeat("─", utils.Max(0, m.Viewport.Width-lipgloss.Width(s)))
 	scr := lipgloss.JoinHorizontal(lipgloss.Center, s, lipgloss.NewStyle().Foreground(lipgloss.Color("#e60000")).Render(line))
 	return scr
-
 }
 
 func (m *AboutModel) footerView() string {
@@ -168,7 +165,6 @@ func (m *AboutModel) footerView() string {
 }
 
 func NewAboutModel(width int, height int) *AboutModel {
-
 	return &AboutModel{Width: width, Height: height, Help: help.New(), KeyMap: AbtKeyMap{}}
 }
 
@@ -181,6 +177,7 @@ func (k AbtKeyMap) ShortHelp() []key.Binding {
 		key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "Back to Menu")),
 	}
 }
+
 func (k AbtKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
