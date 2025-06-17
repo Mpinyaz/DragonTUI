@@ -23,6 +23,12 @@ func InitServer(host string, port int, teaHandler func(ssh.Session) (tea.Model, 
 	s, err := wish.NewServer(wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
+			func(next ssh.Handler) ssh.Handler {
+				return func(sess ssh.Session) {
+					wish.Println(sess, fmt.Sprintf("\x1B[1;31mBye, %s!\x1B[0m", sess.User()))
+					next(sess)
+				}
+			},
 			bubbletea.Middleware(teaHandler),
 			activeterm.Middleware(),
 			lm.Middleware(),

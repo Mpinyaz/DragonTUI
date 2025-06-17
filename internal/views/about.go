@@ -59,7 +59,7 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "esc":
 			var cmd tea.Cmd
-			return GetMenuModel(m.Width, m.Height), cmd
+			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"), CheckWeather)
 		case " ":
 			return m, cmd
 		}

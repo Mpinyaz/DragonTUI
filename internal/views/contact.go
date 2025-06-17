@@ -29,11 +29,11 @@ type FeedbackMsg struct {
 	message string
 }
 
-func NewContactModel(width int, height int) *ContactModel {
-	contactform := huh.NewForm(
+func newForm() *huh.Form {
+	return huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
-				Title("CodeDragon Mailer \n").
+				Title("CodeDragon Mailer").
 				Description("Full Name: ").
 				Placeholder("Enter your full name here").
 				Validate(func(str string) error {
@@ -51,10 +51,10 @@ func NewContactModel(width int, height int) *ContactModel {
 					re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 					if str != "" {
 						if !re.MatchString(str) {
-							return fmt.Errorf("Invalid Email, try again")
+							return fmt.Errorf("invalid Email, try again")
 						}
 					} else {
-						return fmt.Errorf("Email Required, try again")
+						return fmt.Errorf("email required, try again")
 					}
 					return nil
 				}),
@@ -73,6 +73,10 @@ func NewContactModel(width int, height int) *ContactModel {
 			huh.NewConfirm().Key("done").Title("Send Message?").Affirmative("Yes!").Negative("Cancel"),
 		),
 	)
+}
+
+func NewContactModel(width int, height int) *ContactModel {
+	contactform := newForm()
 
 	return &ContactModel{Width: width, Height: height, Help: help.New(), KeyMap: ContactKeyMap{}, Form: contactform}
 }
@@ -111,10 +115,12 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 		case "ctrl+z":
 			return m, tea.Suspend
 		case "esc":
+			m.Form = newForm()
 			var cmd tea.Cmd
-			s := GetMenuModel(m.Width, m.Height)
-			s.Init()
-			return s, cmd
+			// s := GetMenuModel(m.Width, m.Height)
+			// s.Init()
+			// return s, tea.Batch(cmd, CheckWeather)
+			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"), CheckWeather)
 		case " ":
 			return m, cmd
 
@@ -133,18 +139,12 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 	}
 
 	if m.Form.State == huh.StateCompleted {
-		if m.Form.GetBool("done") == true {
+		if m.Form.GetBool("done") {
 			m.FeedbackMsg = FeedbackMsg{
 				email:   m.Form.GetString("email"),
 				name:    m.Form.GetString("name"),
 				message: m.Form.GetString("message"),
 			}
-		} else {
-			m.Form = NewContactModel(m.Width, m.Height).Form
-			s := GetMenuModel(m.Width, m.Height)
-			s.Init()
-			return s, m.Form.Init()
-
 		}
 	}
 
@@ -154,11 +154,16 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 func (m *ContactModel) View() string {
 	switch m.Form.State {
 	case huh.StateCompleted:
+		if m.Form.State == huh.StateNormal {
+			return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, m.Form.View())
+		}
 		s := lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center).Render(fmt.Sprintf("\nHey %s, message was delivered \n", utils.Rainbow(lipgloss.NewStyle(), m.FeedbackMsg.name, blends)))
 		hlp := fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
 
-		return fmt.Sprintf("\n%s\n\n%s", banner.Bold(true).Italic(true).Render(s), hlp)
+		finalRender := fmt.Sprintf("\n%s\n\n%s", banner.Bold(true).Italic(true).Render(s), hlp)
+		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, finalRender)
+
 	default:
-		return m.Form.View()
+		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, m.Form.View())
 	}
 }
