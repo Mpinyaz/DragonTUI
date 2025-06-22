@@ -1,0 +1,18 @@
+services:
+  codedragon-:
+    image: charmcli/soft-serve:latest
+    container_name: soft-serve
+    volumes:
+      - ~/soft-serve:/soft-serve
+    ports:
+      - 23231:23231
+      - 23232:23232
+      - 23233:23233
+      - 9418:9418
+    env_file:
+      - .env
+    environment:
+      SOFT_SERVE_INITIAL_ADMIN_KEYS: "${SOFT_SERVE_INITIAL_ADMIN_KEYS}"
+      SOFT_SERVE_NAME: "${SOFT_SERVE_NAME}"
+      SOFT_SERVE_DATA_PATH: "${SOFT_SERVE_DATA_PATH}"
+    restart: unless-stopped

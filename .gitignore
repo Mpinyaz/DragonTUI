@@ -9,7 +9,7 @@
 # Generated files
 /dist/
 /build/
-
+/data/
 # Dependency files (if vendor directory is used)
 /vendor/
 
