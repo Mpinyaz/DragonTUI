@@ -72,7 +72,6 @@ func main() {
 	}
 	dburl := os.Getenv("DB_URL")
 	app_port, _ := strconv.Atoi(os.Getenv("APP_PORT"))
-
 	app_host := os.Getenv("APP_HOST")
 
 	db, err := db.InitDatabase(dburl)
