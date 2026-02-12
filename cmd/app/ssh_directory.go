@@ -26,7 +26,6 @@ func main() {
 		}
 	}
 
-	// wishlist config
 	cfg := &wishlist.Config{
 		Port: 2233,
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
@@ -39,30 +38,26 @@ func main() {
 				wish.WithMiddleware(
 					append(
 						e.Middlewares,
-						lm.Middleware(),
 						activeterm.Middleware(),
+						lm.Middleware(),
 					)...,
 				),
 			)
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
-				Name:       "Dragon Lair",
-				Desc:       "Find out more about my experience and skills",
-				Address:    "localhost:5173",
-				Link:       wishlist.Link{Name: "", URL: "wwww"},
-				RequestTTY: true,
+				Name:    "Dragon Lair",
+				Desc:    "Find out more about my experience and skills",
+				Address: "localhost:5173",
 			},
 			{
-				Name:       "Code Dragon's Elixir",
-				Desc:       "My Personal Git Server",
-				Address:    "localhost:23231",
-				RequestTTY: true,
+				Name:    "Code Dragon's Elixir",
+				Desc:    "My Personal Git Server",
+				Address: "localhost:23231",
 			},
 		},
 	}
 
-	// start all the servers
 	if err := wishlist.Serve(cfg); err != nil {
 		log.Fatal("Serve", "err", err)
 	}
