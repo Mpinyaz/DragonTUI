@@ -1,11 +1,11 @@
-package views
+package pages
 
 import (
-	"DragonTUI/internal/models"
-	"DragonTUI/internal/utils"
 	"fmt"
 	"os"
 	"strings"
+
+	"DragonTUI/internal/utils"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -45,7 +45,7 @@ func (m *AboutModel) Init() tea.Cmd {
 	return tea.SetWindowTitle("About me")
 }
 
-func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
+func (m *AboutModel) Update(msg tea.Msg) (Page, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -59,7 +59,7 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			return m, tea.Suspend
 		case "esc":
 			var cmd tea.Cmd
-			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"), CheckWeather)
+			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"))
 		case " ":
 			return m, cmd
 		}
@@ -72,7 +72,6 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 		if m.Width == 0 {
 			m.Viewport = viewport.New(m.Width, m.Height-verticalMarginHeight)
 			m.Viewport.YPosition = headerHeight
-			m.Viewport.HighPerformanceRendering = useHighPerformanceRenderer
 			m.Viewport.SetContent(m.Content)
 			m.Ready = true
 
@@ -82,9 +81,6 @@ func (m *AboutModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			m.Viewport.Height = m.Height - verticalMarginHeight
 		}
 
-		if useHighPerformanceRenderer {
-			cmds = append(cmds, viewport.Sync(m.Viewport))
-		}
 	}
 
 	m.Viewport, cmd = m.Viewport.Update(msg)
@@ -116,7 +112,6 @@ func (m *AboutModel) View() string {
 	if !m.Ready {
 		m.Viewport = viewport.New(m.Width, m.Height-verticalMarginHeight)
 		m.Viewport.YPosition = headerHeight
-		m.Viewport.HighPerformanceRendering = useHighPerformanceRenderer
 		m.Viewport.SetContent(m.Content)
 		m.Ready = true
 
@@ -125,7 +120,7 @@ func (m *AboutModel) View() string {
 		m.Viewport.Width = m.Width
 		m.Viewport.Height = m.Height - verticalMarginHeight
 	}
-	m.Help.Styles.ShortDesc = style.Faint(true).UnsetBlink()
+	m.Help.Styles.ShortDesc = utils.Style.Faint(true).UnsetBlink()
 	m.Help.ShortSeparator = " • "
 	m.Help.Styles.ShortSeparator = lipgloss.NewStyle().Blink(true).Foreground(lipgloss.Color("#334dcc"))
 	m.Help.Styles.ShortKey = lipgloss.NewStyle().
@@ -144,15 +139,15 @@ func (m *AboutModel) updateDimensions(width, height int) {
 
 func (m *AboutModel) headerView() string {
 	var title strings.Builder
-	for i, v := range colors {
+	for i, v := range utils.Colors {
 		const offset = 2
 		c := lipgloss.Color(v[0])
 		fmt.Fprint(&title, aboutTitlestyle.MarginLeft(i*offset).Background(c))
-		if i < len(colors)-1 {
+		if i < len(utils.Colors)-1 {
 			title.WriteRune('\n')
 		}
 	}
-	s := aboutTitlestyle.Render(utils.Rainbow(lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#ffffff")), "Elton Mpinyuri", blends))
+	s := aboutTitlestyle.Render(utils.Rainbow(lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#ffffff")), "Elton Mpinyuri", utils.Blends))
 	line := strings.Repeat("─", utils.Max(0, m.Viewport.Width-lipgloss.Width(s)))
 	scr := lipgloss.JoinHorizontal(lipgloss.Center, s, lipgloss.NewStyle().Foreground(lipgloss.Color("#e60000")).Render(line))
 	return scr

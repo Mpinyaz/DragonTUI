@@ -1,12 +1,9 @@
-package views
+package pages
 
 import (
-	"DragonTUI/internal/models"
-	"DragonTUI/internal/utils"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
+
+	"DragonTUI/internal/utils"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -17,9 +14,7 @@ import (
 )
 
 type (
-	MenuItem  int
-	statusMsg string
-	errMsg    struct{ error }
+	MenuItem int
 )
 
 const (
@@ -28,8 +23,6 @@ const (
 	MenuItemContact
 	MenuItemGithub
 )
-
-func (e errMsg) Error() string { return e.error.Error() }
 
 func (m MenuItem) String() string {
 	switch m {
@@ -69,9 +62,6 @@ type MenuModel struct {
 	KeyMap           MenuKeyMap
 	SelectedMenuItem MenuItem
 	MenuList         list.Model
-	WeatherInfo      string
-	Error            error
-	LoadingWeather   bool
 }
 
 type item struct {
@@ -83,24 +73,13 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 func (m *MenuModel) Init() tea.Cmd {
-	if m.WeatherInfo == "" {
-		m.LoadingWeather = true
-		return tea.Batch(tea.SetWindowTitle("Dragon's Lair"), m.Spinner.Tick, CheckWeather)
-	}
-	m.LoadingWeather = false
 	return tea.SetWindowTitle("Dragon's Lair")
 }
 
-func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
+func (m *MenuModel) Update(msg tea.Msg) (Page, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.updateDimensions(msg.Width, msg.Height)
-	case statusMsg:
-		m.WeatherInfo = string(msg)
-		m.LoadingWeather = false
-	case errMsg:
-		m.Error = msg
-		m.LoadingWeather = false
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
@@ -122,7 +101,6 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			if ok {
 				m.SelectedMenuItem = MenuItemFromString(i.title)
 			}
-
 			switch m.SelectedMenuItem {
 			case MenuItemAbout:
 				var cmd tea.Cmd
@@ -141,14 +119,11 @@ func (m *MenuModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 				return m, tea.Quit
 			}
 		}
-
 	}
-	var Spcmd tea.Cmd
-	m.Spinner, Spcmd = m.Spinner.Update(msg)
 
 	var cmd tea.Cmd
 	m.MenuList, cmd = m.MenuList.Update(msg)
-	return m, tea.Batch(cmd, Spcmd)
+	return m, cmd
 }
 
 func (m *MenuModel) updateDimensions(width, height int) {
@@ -208,22 +183,11 @@ func NewMenuModel(width, height int) *MenuModel {
 		KeyMap:           MenuKeyMap{},
 		MenuList:         menuList,
 		SelectedMenuItem: MenuItemNone,
-		LoadingWeather:   false,
 	}
 }
 
 func (m MenuModel) View() string {
-	// Show spinner only while loading weather
-	if m.LoadingWeather {
-		return lipgloss.Place(
-			m.Width,
-			m.Height,
-			lipgloss.Center,
-			lipgloss.Center,
-			fmt.Sprintf("%s %s", m.Spinner.View(), m.Text))
-	}
-
-	m.Help.Styles.ShortDesc = style.Faint(true).Blink(true)
+	m.Help.Styles.ShortDesc = utils.Style.Faint(true).Blink(true)
 	m.Help.ShortSeparator = " • "
 	m.Help.Styles.ShortSeparator = lipgloss.NewStyle().
 		Blink(true).
@@ -232,18 +196,12 @@ func (m MenuModel) View() string {
 		Italic(true).
 		Foreground(lipgloss.Color("#fff8db"))
 
-	banner := fmt.Sprintf("\n%s\n", banner.Render(utils.Rainbow(lipgloss.NewStyle().Blink(true), utils.Logo, blends)))
-
+	banner := fmt.Sprintf("\n%s\n", utils.Banner.Render(utils.Rainbow(lipgloss.NewStyle().Blink(true), utils.Logo, utils.Blends)))
 	menuList := m.MenuList.View()
 	keymap := fmt.Sprintf("\n%s\n", m.Help.View(m.KeyMap))
-	var finalRender string
-	if m.Error != nil {
-		fmt.Printf("Error: %s", m.Error.Error())
-		finalRender = banner + menuList + keymap
-	} else {
-		weatherInfo := fmt.Sprintf("\nCurrent Weather: %s\n", m.WeatherInfo)
-		finalRender = banner + menuList + weatherInfo + keymap
-	}
+
+	finalRender := banner + menuList + keymap
+
 	return lipgloss.Place(
 		m.Width,
 		m.Height,
@@ -251,19 +209,4 @@ func (m MenuModel) View() string {
 		lipgloss.Center,
 		finalRender,
 	)
-}
-
-func CheckWeather() tea.Msg {
-	url := "https://wttr.in/pretoria?format=%l:+%c+%t"
-	c := &http.Client{Timeout: 11 * time.Second}
-	res, err := c.Get(url)
-	if err != nil {
-		return errMsg{err}
-	}
-	defer res.Body.Close() // nolint:errcheck
-	result, err := io.ReadAll(res.Body)
-	if err != nil {
-		return errMsg{err}
-	}
-	return statusMsg(result)
 }

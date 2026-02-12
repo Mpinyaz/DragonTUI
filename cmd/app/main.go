@@ -1,13 +1,13 @@
 package main
 
 import (
-	"DragonTUI/internal/db"
-	"DragonTUI/internal/models"
-	"DragonTUI/internal/server"
-	"DragonTUI/internal/views"
 	"log"
 	"os"
 	"strconv"
+
+	"DragonTUI/internal/db"
+	"DragonTUI/internal/pages"
+	"DragonTUI/internal/server"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/ssh"
@@ -16,7 +16,7 @@ import (
 
 type appModel struct {
 	term          string
-	currentPage   models.Page
+	currentPage   pages.Page
 	lastWindowMsg tea.WindowSizeMsg
 }
 
@@ -40,7 +40,7 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	page, cmd := m.currentPage.Update(msg)
 	m.currentPage = page
 
-	if newPage, ok := m.currentPage.(models.Page); ok && newPage != page {
+	if m.currentPage != page {
 		return m, tea.Batch(cmd, func() tea.Msg { return m.lastWindowMsg })
 	}
 	return m, cmd
@@ -56,7 +56,7 @@ func (m *appModel) View() string {
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, _ := s.Pty()
 
-	initPage := views.NewMenuModel(pty.Window.Width, pty.Window.Height)
+	initPage := pages.NewMenuModel(pty.Window.Width, pty.Window.Height)
 
 	app := &appModel{
 		term:        pty.Term,
@@ -71,8 +71,8 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 	dburl := os.Getenv("DB_URL")
-	app_port, _ := strconv.Atoi(os.Getenv("APP_PORT"))
-	app_host := os.Getenv("APP_HOST")
+	appPort, _ := strconv.Atoi(os.Getenv("APP_PORT"))
+	appHost := os.Getenv("APP_HOST")
 
 	db, err := db.InitDatabase(dburl)
 	if err != nil {
@@ -84,5 +84,5 @@ func main() {
 		log.Fatalf("err: %v", err)
 	}
 	defer f.Close()
-	server.InitServer(app_host, app_port, teaHandler)
+	server.InitServer(appHost, appPort, teaHandler)
 }

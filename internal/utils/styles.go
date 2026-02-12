@@ -1,8 +1,6 @@
-package views
+package utils
 
 import (
-	"DragonTUI/internal/utils"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/gamut"
 )
@@ -27,7 +25,7 @@ var (
 	}
 	// colors = [][]string{{"#FF5733"}, {"#33FF57"}, {"#5733FF"}, {"#FFD700"}}
 
-	colors = utils.ColorGrid(1, 5)
+	Colors = ColorGrid(1, 5)
 	//
 	titleStyle = lipgloss.NewStyle().
 			MarginLeft(1).
@@ -35,8 +33,8 @@ var (
 			Padding(0, 1).
 			Italic(true).
 			Foreground(lipgloss.Color("#FFF7DB"))
-	blends = gamut.Blends(lipgloss.Color("#F25D94"), lipgloss.Color("#EDFF82"), 50)
-	style  = lipgloss.NewStyle().
+	Blends = gamut.Blends(lipgloss.Color("#F25D94"), lipgloss.Color("#EDFF82"), 50)
+	Style  = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#e60080")).
 		AlignHorizontal(lipgloss.Center).
@@ -45,6 +43,6 @@ var (
 		Border(customBorder).
 		BorderForeground(lipgloss.Color("#643aff")).
 		Padding(1, 3)
-	banner = lipgloss.NewStyle().
+	Banner = lipgloss.NewStyle().
 		Padding(1)
 )

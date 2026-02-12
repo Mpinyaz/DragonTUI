@@ -1,11 +1,10 @@
-package views
+package pages
 
 import (
 	"fmt"
 	"os"
 	"regexp"
 
-	"DragonTUI/internal/models"
 	"DragonTUI/internal/utils"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -148,7 +147,7 @@ func (m *ContactModel) Init() tea.Cmd {
 	return tea.Batch(tea.SetWindowTitle("Contact Me"), m.Form.Init())
 }
 
-func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
+func (m *ContactModel) Update(msg tea.Msg) (Page, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -170,7 +169,7 @@ func (m *ContactModel) Update(msg tea.Msg) (models.Page, tea.Cmd) {
 			m.Form = newForm()
 			m.EmailSent = false
 			m.EmailError = nil
-			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"), CheckWeather)
+			return GetMenuModel(m.Width, m.Height), tea.Batch(cmd, tea.SetWindowTitle("Dragon's Lair"))
 		case " ":
 			return m, cmd
 		}
@@ -217,7 +216,7 @@ func (m *ContactModel) View() string {
 			s = lipgloss.NewStyle().
 				Align(lipgloss.Center, lipgloss.Center).
 				Render(fmt.Sprintf("\n Hey %s, your message was delivered successfully!\n",
-					utils.Rainbow(lipgloss.NewStyle(), m.FeedbackMsg.name, blends)))
+					utils.Rainbow(lipgloss.NewStyle(), m.FeedbackMsg.name, utils.Blends)))
 		} else {
 			// Sending in progress
 			s = lipgloss.NewStyle().
@@ -226,7 +225,7 @@ func (m *ContactModel) View() string {
 		}
 
 		hlp := fmt.Sprintf("\n%s", m.Help.View(m.KeyMap))
-		finalRender := fmt.Sprintf("\n%s\n\n%s", banner.Bold(true).Italic(true).Render(s), hlp)
+		finalRender := fmt.Sprintf("\n%s\n\n%s", utils.Banner.Bold(true).Italic(true).Render(s), hlp)
 		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, finalRender)
 
 	default:
